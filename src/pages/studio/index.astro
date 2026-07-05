@@ -70,10 +70,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       <p>Cloudflare Pagesのシークレット設定が終わっている場合、ここから記事MarkdownをGitHubへ反映できます。反映後はCloudflare Pagesが自動公開します。</p>
       <label>公開キー（この端末に保存しません）<input id="publish-key" type="password" autocomplete="off" placeholder="Cloudflareに登録したPUBLISH_API_KEY" /></label>
       <div class="studio-actions">
+        <button class="button button--ghost" id="check-github" type="button">GitHub接続を診断</button>
         <button class="button button--primary" id="publish" type="button">GitHubへ公開</button>
         <button class="button button--ghost" id="make-key" type="button">公開キーを作る</button>
       </div>
-      <p id="publish-status" class="form-help" aria-live="polite">初回は README の「Cloudflare設定」を完了してください。</p>
+      <p id="publish-status" class="form-help" aria-live="polite">公開前に「GitHub接続を診断」を押すと、トークン利用者と書き込み権限を確認できます。</p>
     </div>
   </section>
   <script type="module" src="/studio.js"></script>

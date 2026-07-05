@@ -182,17 +182,19 @@ async function copyText(text) {
 
 function setStatus(message, error = false) {
   const target = $('publish-status');
+  if (!target) return;
   target.textContent = message;
   target.classList.toggle('is-error', error);
 }
 
-$('publishedAt').value = today();
+const publishedAtInput = $('publishedAt');
+if (publishedAtInput) publishedAtInput.value = today();
 loadDraft();
-if (!$('publishedAt').value) $('publishedAt').value = today();
+if (publishedAtInput && !publishedAtInput.value) publishedAtInput.value = today();
 fields.forEach((field) => $(field)?.addEventListener('input', saveDraft));
-$('category').addEventListener('change', saveDraft);
+$('category')?.addEventListener('change', saveDraft);
 
-$('copy-prompt').addEventListener('click', async () => {
+$('copy-prompt')?.addEventListener('click', async () => {
   try {
     await copyText(makePrompt());
     $('copy-prompt').textContent = 'コピーしました';
@@ -202,19 +204,19 @@ $('copy-prompt').addEventListener('click', async () => {
   }
 });
 
-$('clear-draft').addEventListener('click', () => {
+$('clear-draft')?.addEventListener('click', () => {
   if (!window.confirm('入力した下書きをこのブラウザから消します。よろしいですか？')) return;
   localStorage.removeItem(STORAGE_KEY);
   fields.forEach((field) => { if ($(field)) $(field).value = ''; });
   $('publishedAt').value = today();
-  $('preview').innerHTML = '<p>ここに記事の見た目が表示されます。</p>';
+  if ($('preview')) $('preview').innerHTML = '<p>ここに記事の見た目が表示されます。</p>';
 });
 
-$('show-preview').addEventListener('click', () => {
-  $('preview').innerHTML = renderMarkdown($('body').value);
+$('show-preview')?.addEventListener('click', () => {
+  if ($('preview') && $('body')) $('preview').innerHTML = renderMarkdown($('body').value);
 });
 
-$('download-markdown').addEventListener('click', () => {
+$('download-markdown')?.addEventListener('click', () => {
   try {
     const { markdown, slug } = createMarkdown();
     const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
@@ -230,24 +232,27 @@ $('download-markdown').addEventListener('click', () => {
   }
 });
 
-$('check-github').addEventListener('click', async () => {
-  try {
-    const key = $('publish-key').value.trim();
-    if (!key) throw new Error('公開キーを入力してから診断してください。');
-    setStatus('GitHub接続を確認しています…');
-    const response = await fetch('/api/github-status', {
-      method: 'POST',
-      headers: { 'X-Publish-Key': key },
-    });
-    const result = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(result.error || 'GitHub接続診断に失敗しました。');
-    setStatus(result.message || 'GitHub接続を確認しました。', !result.ok);
-  } catch (error) {
-    setStatus(error.message, true);
-  }
-});
+const checkGithubButton = $('check-github');
+if (checkGithubButton) {
+  checkGithubButton.addEventListener('click', async () => {
+    try {
+      const key = $('publish-key')?.value.trim();
+      if (!key) throw new Error('公開キーを入力してから診断してください。');
+      setStatus('GitHub接続を確認しています…');
+      const response = await fetch('/api/github-status', {
+        method: 'POST',
+        headers: { 'X-Publish-Key': key },
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || 'GitHub接続診断に失敗しました。');
+      setStatus(result.message || 'GitHub接続を確認しました。', !result.ok);
+    } catch (error) {
+      setStatus(error.message, true);
+    }
+  });
+}
 
-$('make-key').addEventListener('click', async () => {
+$('make-key')?.addEventListener('click', async () => {
   const bytes = new Uint8Array(24);
   crypto.getRandomValues(bytes);
   const key = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
@@ -256,7 +261,7 @@ $('make-key').addEventListener('click', async () => {
   setStatus('公開キーを作成してコピーしました。Cloudflareの PUBLISH_API_KEY に同じ値を登録してください。');
 });
 
-$('publish').addEventListener('click', async () => {
+$('publish')?.addEventListener('click', async () => {
   try {
     const key = $('publish-key').value.trim();
     if (!key) throw new Error('公開キーを入力してください。');
@@ -278,7 +283,7 @@ $('publish').addEventListener('click', async () => {
       link.rel = 'noopener noreferrer';
       link.textContent = 'GitHubのコミットを確認する →';
       link.className = 'text-link';
-      $('publish-status').append(document.createElement('br'), link);
+      $('publish-status')?.append(document.createElement('br'), link);
     }
   } catch (error) {
     setStatus(error.message, true);
