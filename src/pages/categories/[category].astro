@@ -1,0 +1,46 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ArticleCard from '../../components/ArticleCard.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const categories = {
+    favorite: '推しポケ語り',
+    memories: 'ゲームと思い出',
+    battle: 'ゆる対戦・育成',
+    chat: 'ポケモン雑談',
+    lounge: 'みんなの休憩所',
+  };
+  return Object.entries(categories).map(([category, name]) => ({
+    params: { category },
+    props: { category, name },
+  }));
+}
+
+const { category, name } = Astro.props;
+const posts = (await getCollection('blog', ({ data }) => !data.draft && data.category === category))
+  .sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf());
+---
+<BaseLayout title={name} description={`${name}の記事一覧です。`}>
+  <section class="page-hero">
+    <div class="container narrow">
+      <p class="eyebrow">CATEGORY</p>
+      <h1>{name}</h1>
+      <p>{posts.length ? `${posts.length}件の記事があります。` : 'これから記事を追加していきます。'}</p>
+    </div>
+  </section>
+  <section class="section">
+    <div class="container">
+      {posts.length ? (
+        <div class="article-grid">
+          {posts.map((post) => <ArticleCard post={post} />)}
+        </div>
+      ) : (
+        <div class="empty-state">
+          <p>最初の記事を準備中です。</p>
+          <a class="button button--ghost" href="/">トップへ戻る</a>
+        </div>
+      )}
+    </div>
+  </section>
+</BaseLayout>

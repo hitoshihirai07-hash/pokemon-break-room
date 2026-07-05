@@ -1,0 +1,14 @@
+---
+const { category } = Astro.props as { category: keyof typeof categoryNames }; 
+const categoryNames = {
+  favorite: '推しポケ語り',
+  memories: 'ゲームと思い出',
+  battle: 'ゆる対戦・育成',
+  chat: 'ポケモン雑談',
+  lounge: 'みんなの休憩所',
+};
+const categoryClass = `category--${category}`;
+---
+<a class:list={['category-pill', categoryClass]} href={`/categories/${category}/`}>
+  {categoryNames[category] ?? category}
+</a>

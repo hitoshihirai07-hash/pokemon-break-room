@@ -1,0 +1,21 @@
+---
+import CategoryPill from './CategoryPill.astro';
+
+const { post, featured = false } = Astro.props;
+const date = post.data.publishedAt.toLocaleDateString('ja-JP', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+---
+<article class:list={['article-card', { 'article-card--featured': featured }]}>
+  <div class="article-card__meta">
+    <CategoryPill category={post.data.category} />
+    <time datetime={post.data.publishedAt.toISOString()}>{date}</time>
+  </div>
+  <h2><a href={`/posts/${post.id}/`}>{post.data.title}</a></h2>
+  <p>{post.data.description}</p>
+  <a class="article-card__link" href={`/posts/${post.id}/`} aria-label={`${post.data.title}を読む`}>
+    記事を読む <span aria-hidden="true">→</span>
+  </a>
+</article>

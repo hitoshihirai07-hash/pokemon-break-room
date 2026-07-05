@@ -1,0 +1,75 @@
+---
+import '../styles/global.css';
+
+const {
+  title = 'ポケモン好きの休憩所',
+  description = '好きなポケモンを、気軽に語れる場所。',
+  noindex = false,
+  ogType = 'website',
+} = Astro.props;
+
+const site = import.meta.env.SITE || 'https://pokemon-break-room.pages.dev';
+const canonical = new URL(Astro.url.pathname, site).href;
+const fullTitle = title === 'ポケモン好きの休憩所' ? title : `${title} | ポケモン好きの休憩所`;
+---
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#f4b860" />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="alternate" type="application/rss+xml" title="ポケモン好きの休憩所 RSS" href="/rss.xml" />
+    {noindex && <meta name="robots" content="noindex,nofollow" />}
+    <meta property="og:site_name" content="ポケモン好きの休憩所" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={new URL('/og-default.svg', site).href} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <title>{fullTitle}</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">本文へ移動</a>
+    <header class="site-header">
+      <div class="container site-header__inner">
+        <a class="brand" href="/" aria-label="ポケモン好きの休憩所 トップへ">
+          <span class="brand__mark" aria-hidden="true">●</span>
+          <span>
+            <strong>ポケモン好きの休憩所</strong>
+            <small>好きなポケモンを、気軽に語れる場所。</small>
+          </span>
+        </a>
+        <nav class="site-nav" aria-label="メインメニュー">
+          <a href="/">ホーム</a>
+          <a href="/categories/favorite/">推しポケ語り</a>
+          <a href="/categories/memories/">ゲームと思い出</a>
+          <a href="/categories/battle/">ゆる対戦</a>
+          <a href="/about/">この場所について</a>
+        </nav>
+      </div>
+    </header>
+    <main id="main">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div class="container site-footer__inner">
+        <div>
+          <strong>ポケモン好きの休憩所</strong>
+          <p>強さや知識量に関係なく、好きなポケモンの話を置いていける個人ブログです。</p>
+        </div>
+        <div class="site-footer__links">
+          <a href="/about/">この場所について</a>
+          <a href="/privacy/">プライバシーポリシー</a>
+          <a href="/rss.xml">RSS</a>
+        </div>
+      </div>
+      <div class="container site-footer__note">
+        <p>本サイトは非公式の個人ファンブログです。ポケモンに関する商標・権利は、各権利者に帰属します。</p>
+      </div>
+    </footer>
+  </body>
+</html>

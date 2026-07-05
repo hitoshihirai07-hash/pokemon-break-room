@@ -1,0 +1,71 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import CategoryPill from '../../components/CategoryPill.astro';
+import ArticleCard from '../../components/ArticleCard.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog', ({ data }) => !data.draft);
+  return posts.map((post) => ({
+    params: { slug: post.id },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+const date = post.data.publishedAt.toLocaleDateString('ja-JP', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+const allPosts = (await getCollection('blog', ({ data }) => !data.draft && data.category === post.data.category && data.title !== post.data.title))
+  .sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf())
+  .slice(0, 3);
+const site = import.meta.env.SITE || 'https://pokemon-break-room.pages.dev';
+const articleUrl = new URL(`/posts/${post.id}/`, site).href;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: post.data.title,
+  description: post.data.description,
+  datePublished: post.data.publishedAt.toISOString(),
+  dateModified: (post.data.updatedAt ?? post.data.publishedAt).toISOString(),
+  mainEntityOfPage: articleUrl,
+  author: { '@type': 'Person', name: 'ポケモン好きの休憩所' },
+  publisher: { '@type': 'Organization', name: 'ポケモン好きの休憩所' },
+};
+---
+<BaseLayout title={post.data.title} description={post.data.description} ogType="article">
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  <article class="post">
+    <header class="post__header">
+      <div class="container narrow">
+        <div class="post__meta"><CategoryPill category={post.data.category} /><time datetime={post.data.publishedAt.toISOString()}>{date}</time></div>
+        <h1>{post.data.title}</h1>
+        <p class="post__description">{post.data.description}</p>
+        <div class="tag-list">
+          {post.data.tags.map((tag) => <span>#{tag}</span>)}
+        </div>
+      </div>
+    </header>
+    <div class="container narrow post__body prose">
+      <Content />
+    </div>
+  </article>
+  <section class="section section--soft">
+    <div class="container narrow question-box">
+      <p class="eyebrow">LET'S TALK</p>
+      <h2>あなたの思い出も聞かせてください。</h2>
+      <p>記事を読んで思い出したことや、違う楽しみ方があれば、ぜひどこかで言葉にしてみてください。</p>
+    </div>
+  </section>
+  {allPosts.length > 0 && (
+    <section class="section">
+      <div class="container">
+        <div class="section-heading"><h2>同じカテゴリの記事</h2></div>
+        <div class="article-grid">{allPosts.map((related) => <ArticleCard post={related} />)}</div>
+      </div>
+    </section>
+  )}
+</BaseLayout>

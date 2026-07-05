@@ -1,0 +1,17 @@
+/studio
+  X-Robots-Tag: noindex, nofollow
+  X-Frame-Options: DENY
+  Referrer-Policy: same-origin
+
+/studio/*
+  X-Robots-Tag: noindex, nofollow
+  X-Frame-Options: DENY
+  Referrer-Policy: same-origin
+
+/api/*
+  X-Frame-Options: DENY
+  Referrer-Policy: same-origin
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin

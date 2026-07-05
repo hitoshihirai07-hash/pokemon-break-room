@@ -1,0 +1,86 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ArticleCard from '../components/ArticleCard.astro';
+import { getCollection } from 'astro:content';
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf());
+const latest = posts.slice(0, 3);
+const categoryCards = [
+  { key: 'favorite', title: '推しポケ語り', text: '強さだけでは語れない、相棒ポケモンの魅力や思い出。' },
+  { key: 'memories', title: 'ゲームと思い出', text: '旅パーティ、最初に選んだ御三家、忘れられない場面。' },
+  { key: 'battle', title: 'ゆる対戦・育成', text: '好きなポケモンで遊ぶための、背伸びしすぎない対戦メモ。' },
+  { key: 'chat', title: 'ポケモン雑談', text: 'アニメ、グッズ、あるあるなど、気軽に置いていく話。' },
+  { key: 'lounge', title: 'みんなの休憩所', text: '今月のお題や、読者と一緒に語りたいテーマ。' },
+];
+---
+<BaseLayout>
+  <section class="hero">
+    <div class="container hero__grid">
+      <div class="hero__content">
+        <p class="eyebrow">POKÉMON FAN BLOG</p>
+        <h1>ポケモンの話を、<br />もっと気軽に。</h1>
+        <p class="hero__lead">「ポケモン好きの休憩所」は、推しポケモンや旅の思い出、ゆるい対戦の話を置いていける個人ブログです。</p>
+        <div class="hero__actions">
+          <a class="button button--primary" href="#latest">最新の記事を見る</a>
+          <a class="button button--ghost" href="/about/">この場所について</a>
+        </div>
+      </div>
+      <div class="hero__art" aria-hidden="true">
+        <span class="hero__sun"></span>
+        <span class="hero__leaf hero__leaf--one"></span>
+        <span class="hero__leaf hero__leaf--two"></span>
+        <span class="hero__ball">●</span>
+        <span class="hero__spark hero__spark--one">✦</span>
+        <span class="hero__spark hero__spark--two">✦</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="latest" class="section">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">LATEST NOTES</p>
+          <h2>新着記事</h2>
+        </div>
+        <a class="text-link" href="/categories/lounge/">記事一覧を見る <span aria-hidden="true">→</span></a>
+      </div>
+      <div class="article-grid">
+        {latest.map((post, index) => <ArticleCard post={post} featured={index === 0} />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--soft">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">CHOOSE A CORNER</p>
+          <h2>気分から読む</h2>
+        </div>
+      </div>
+      <div class="category-grid">
+        {categoryCards.map((category, index) => (
+          <a class={`category-card category-card--${category.key}`} href={`/categories/${category.key}/`}>
+            <span class="category-card__number">0{index + 1}</span>
+            <h3>{category.title}</h3>
+            <p>{category.text}</p>
+            <span aria-hidden="true">→</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container prompt-card">
+      <div>
+        <p class="eyebrow">THIS MONTH'S QUESTION</p>
+        <h2>最初に選んだ御三家、覚えていますか？</h2>
+        <p>世代や強さは関係なし。最初の相棒と、覚えている場面をひとつだけでも教えてください。</p>
+      </div>
+      <a class="button button--primary" href="/posts/first-starter-memory/">記事を読む</a>
+    </div>
+  </section>
+</BaseLayout>
