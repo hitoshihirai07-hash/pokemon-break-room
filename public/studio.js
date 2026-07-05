@@ -230,6 +230,23 @@ $('download-markdown').addEventListener('click', () => {
   }
 });
 
+$('check-github').addEventListener('click', async () => {
+  try {
+    const key = $('publish-key').value.trim();
+    if (!key) throw new Error('公開キーを入力してから診断してください。');
+    setStatus('GitHub接続を確認しています…');
+    const response = await fetch('/api/github-status', {
+      method: 'POST',
+      headers: { 'X-Publish-Key': key },
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(result.error || 'GitHub接続診断に失敗しました。');
+    setStatus(result.message || 'GitHub接続を確認しました。', !result.ok);
+  } catch (error) {
+    setStatus(error.message, true);
+  }
+});
+
 $('make-key').addEventListener('click', async () => {
   const bytes = new Uint8Array(24);
   crypto.getRandomValues(bytes);

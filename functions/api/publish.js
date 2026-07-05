@@ -6,32 +6,86 @@ const json = (body, status = 200) => new Response(JSON.stringify(body), {
   },
 });
 
+const value = (input) => typeof input === 'string' ? input.trim() : '';
 const isValidSlug = (slug) => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug);
 
-function encodeBase64(value) {
-  const bytes = new TextEncoder().encode(value);
+function encodeBase64(input) {
+  const bytes = new TextEncoder().encode(input);
   let binary = '';
   for (const byte of bytes) binary += String.fromCharCode(byte);
   return btoa(binary);
 }
 
-export async function onRequestPost(context) {
-  const { request, env } = context;
+function configFrom(env) {
+  return {
+    token: value(env.GITHUB_TOKEN),
+    owner: value(env.GITHUB_OWNER),
+    repo: value(env.GITHUB_REPO),
+    branch: value(env.GITHUB_BRANCH) || 'main',
+    publishKey: value(env.PUBLISH_API_KEY),
+  };
+}
+
+function headers(token) {
+  return {
+    Accept: 'application/vnd.github+json',
+    Authorization: `Bearer ${token}`,
+    'X-GitHub-Api-Version': '2022-11-28',
+    'User-Agent': 'pokemon-break-room-publisher',
+  };
+}
+
+async function readJson(response) {
+  return response.json().catch(() => ({}));
+}
+
+function githubError(action, response, body, config, extra = {}) {
+  const message = body?.message || 'GitHubから詳細なエラー内容を取得できませんでした。';
+  const permissionHint = response.headers.get('X-Accepted-GitHub-Permissions') || '';
+  const detail = [
+    `GitHub ${action}に失敗しました（HTTP ${response.status}）。`,
+    message,
+    `対象: ${config.owner}/${config.repo}（${config.branch}）`,
+    permissionHint ? `GitHubが要求した権限: ${permissionHint}` : '',
+  ].filter(Boolean).join(' ');
+  return json({
+    error: detail,
+    github: {
+      status: response.status,
+      message,
+      target: `${config.owner}/${config.repo}`,
+      branch: config.branch,
+      acceptedPermissions: permissionHint || null,
+      ...extra,
+    },
+  }, 502);
+}
+
+async function validateRequest(request, env) {
   const origin = request.headers.get('Origin');
   const expectedOrigin = new URL(request.url).origin;
-  if (origin && origin !== expectedOrigin) return json({ error: '許可されていない送信元です。' }, 403);
+  if (origin && origin !== expectedOrigin) {
+    return { error: json({ error: '許可されていない送信元です。' }, 403) };
+  }
+  const config = configFrom(env);
+  const providedKey = value(request.headers.get('X-Publish-Key'));
+  if (!config.publishKey || providedKey !== config.publishKey) {
+    return { error: json({ error: '公開キーが正しくありません。' }, 401) };
+  }
+  if (!config.token || !config.owner || !config.repo) {
+    return { error: json({ error: 'Cloudflareの GITHUB_TOKEN / GITHUB_OWNER / GITHUB_REPO が未設定です。' }, 500) };
+  }
+  return { config };
+}
 
-  const providedKey = request.headers.get('X-Publish-Key') || '';
-  if (!env.PUBLISH_API_KEY || providedKey !== env.PUBLISH_API_KEY) {
-    return json({ error: '公開キーが正しくありません。' }, 401);
-  }
-  if (!env.GITHUB_TOKEN || !env.GITHUB_OWNER || !env.GITHUB_REPO) {
-    return json({ error: 'CloudflareのGitHub連携用シークレットが未設定です。' }, 500);
-  }
+export async function onRequestPost(context) {
+  const checked = await validateRequest(context.request, context.env);
+  if (checked.error) return checked.error;
+  const { config } = checked;
 
   let payload;
   try {
-    payload = await request.json();
+    payload = await context.request.json();
   } catch {
     return json({ error: '送信内容を読み取れませんでした。' }, 400);
   }
@@ -43,39 +97,33 @@ export async function onRequestPost(context) {
   }
   if (typeof title !== 'string' || !title.trim()) return json({ error: '記事テーマがありません。' }, 400);
 
-  const branch = env.GITHUB_BRANCH || 'main';
+  const apiHeaders = headers(config.token);
   const filePath = `src/content/blog/${slug}.md`;
-  const url = `https://api.github.com/repos/${encodeURIComponent(env.GITHUB_OWNER)}/${encodeURIComponent(env.GITHUB_REPO)}/contents/${filePath.split('/').map(encodeURIComponent).join('/')}`;
-  const headers = {
-    Accept: 'application/vnd.github+json',
-    Authorization: `Bearer ${env.GITHUB_TOKEN}`,
-    'X-GitHub-Api-Version': '2022-11-28',
-    'User-Agent': 'pokemon-break-room-publisher',
-  };
+  const encodedPath = filePath.split('/').map(encodeURIComponent).join('/');
+  const url = `https://api.github.com/repos/${encodeURIComponent(config.owner)}/${encodeURIComponent(config.repo)}/contents/${encodedPath}`;
 
   let sha;
-  const existing = await fetch(`${url}?ref=${encodeURIComponent(branch)}`, { headers });
+  const existing = await fetch(`${url}?ref=${encodeURIComponent(config.branch)}`, { headers: apiHeaders });
   if (existing.ok) {
-    const current = await existing.json();
+    const current = await readJson(existing);
     sha = current.sha;
   } else if (existing.status !== 404) {
-    return json({ error: 'GitHub上の記事確認に失敗しました。トークン権限とリポジトリ名を確認してください。' }, 502);
+    const detail = await readJson(existing);
+    return githubError('上書き対象の記事確認', existing, detail, config);
   }
 
   const commit = await fetch(url, {
     method: 'PUT',
-    headers: { ...headers, 'Content-Type': 'application/json' },
+    headers: { ...apiHeaders, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       message: `docs: publish ${title.trim().slice(0, 70)}`,
       content: encodeBase64(markdown),
-      branch,
+      branch: config.branch,
       ...(sha ? { sha } : {}),
     }),
   });
-  const result = await commit.json().catch(() => ({}));
-  if (!commit.ok) {
-    return json({ error: result.message || 'GitHubへの反映に失敗しました。' }, 502);
-  }
+  const result = await readJson(commit);
+  if (!commit.ok) return githubError('記事の作成・更新', commit, result, config);
 
   return json({
     ok: true,
@@ -83,4 +131,3 @@ export async function onRequestPost(context) {
     commitUrl: result.commit?.html_url || null,
   });
 }
-
