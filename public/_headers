@@ -12,6 +12,10 @@
   X-Frame-Options: DENY
   Referrer-Policy: same-origin
 
+/og/*
+  Content-Type: image/png
+  Cache-Control: public, max-age=31536000, immutable
+
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin

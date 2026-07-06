@@ -15,11 +15,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       <form id="studio-form" class="studio-panel" novalidate>
         <div class="studio-panel__heading">
           <p class="eyebrow">STEP 1</p>
-          <h2>メモを置く</h2>
-          <p>完成文ではなく、思ったことを箇条書きで残してください。</p>
+          <h2>記事の設定と下書きメモ</h2>
+          <p>公開時に表示する情報を入力し、本文を作る前は箇条書きのメモも残してください。</p>
         </div>
         <div class="form-grid">
-          <label>記事テーマ<span>必須</span><input id="title" name="title" type="text" placeholder="例：最初に選んだ御三家、覚えていますか？" required /></label>
+          <label>公開タイトル<span>必須</span><input id="title" name="title" type="text" placeholder="例：最初に選んだ御三家、覚えていますか？" required /></label>
           <label>カテゴリ<span>必須</span>
             <select id="category" name="category">
               <option value="favorite">推しポケ語り</option>
@@ -31,11 +31,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           </label>
           <label>公開日<input id="publishedAt" name="publishedAt" type="date" /></label>
           <label>URL末尾（英数字）<input id="slug" name="slug" type="text" placeholder="first-starter-memory" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" /><small>未入力なら「pokemon-note-日付」になります。</small></label>
-          <label class="form-grid__full">記事の説明文（検索・SNS用）<input id="description" name="description" maxlength="180" placeholder="記事内容を120〜180字程度で説明します。空欄なら本文から仮の説明文を作ります。" /></label>
+          <label class="form-grid__full">記事の説明文（検索結果・SNS共有用）<input id="description" name="description" maxlength="180" placeholder="記事内容を120〜180字程度で説明します。空欄なら本文から仮の説明文を作ります。" /></label>
           <label class="form-grid__full">タグ（カンマ区切り）<input id="tags" name="tags" type="text" placeholder="例：御三家, 思い出, 旅パーティ" /></label>
-          <label class="form-grid__full">箇条書きメモ<span>必須</span><textarea id="notes" name="notes" rows="12" placeholder="・最初に選んだポケモン&#10;・当時の思い出&#10;・今も好きな理由&#10;・書かないでほしいこと" required></textarea></label>
+          <label class="form-grid__full">記事末に自動表示する問いかけ<input id="question" name="question" type="text" maxlength="240" placeholder="例：あなたが最初に選んだ御三家も教えてください。" /><small>本文には書かず、ここにだけ入力してください。</small></label>
+          <label class="form-grid__full">下書き用メモ<textarea id="notes" name="notes" rows="12" placeholder="・最初に選んだポケモン&#10;・当時の思い出&#10;・今も好きな理由&#10;・書かないでほしいこと"></textarea></label>
           <label class="form-grid__full">入れたいこと・注意したいこと<textarea id="instructions" name="instructions" rows="5" placeholder="例：断定しすぎない。作品の公式情報は確認できたものだけにする。"></textarea></label>
-          <label class="form-grid__full">記事の最後に置く問いかけ<input id="question" name="question" type="text" placeholder="例：あなたが最初に選んだ御三家も教えてください。" /></label>
         </div>
         <div class="studio-actions">
           <button class="button button--primary" id="copy-prompt" type="button">AIへの依頼文をコピー</button>
@@ -47,17 +47,17 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       <section class="studio-panel studio-panel--output">
         <div class="studio-panel__heading">
           <p class="eyebrow">STEP 2</p>
-          <h2>下書きを確認する</h2>
-          <p>AIから受け取ったMarkdown本文を貼り付けてください。本文だけで大丈夫です。</p>
+          <h2>記事本文と公開前確認</h2>
+          <p>AIから受け取ったMarkdown本文を貼り付け、「実記事の見た目で確認」を押してください。</p>
         </div>
-        <label>生成済みの本文（Markdown）<textarea id="body" rows="20" placeholder="# 見出し&#10;&#10;ここに本文を貼り付けます。"></textarea></label>
+        <label>記事本文（Markdown）<textarea id="body" rows="20" placeholder="## 見出し&#10;&#10;ここに本文を貼り付けます。"></textarea></label>
         <div class="studio-actions">
-          <button class="button button--primary" id="show-preview" type="button">記事をプレビュー</button>
+          <button class="button button--primary" id="show-preview" type="button">実記事の見た目で確認</button>
           <button class="button button--ghost" id="download-markdown" type="button">Markdownを保存</button>
         </div>
         <div class="preview-wrap">
-          <p class="eyebrow">PREVIEW</p>
-          <article id="preview" class="prose preview" aria-live="polite"><p>ここに記事の見た目が表示されます。</p></article>
+          <p class="eyebrow">ARTICLE PREVIEW</p>
+          <article id="preview" class="preview" aria-live="polite"><p>ここに公開時に近い記事の見た目が表示されます。</p></article>
         </div>
       </section>
     </div>

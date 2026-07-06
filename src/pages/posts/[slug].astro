@@ -24,11 +24,14 @@ const allPosts = (await getCollection('blog', ({ data }) => !data.draft && data.
   .slice(0, 3);
 const site = import.meta.env.SITE || 'https://pokemon-break-room.pages.dev';
 const articleUrl = new URL(`/posts/${post.id}/`, site).href;
+const ogImage = `/og/${post.id}`;
+const articleQuestion = post.data.question || 'あなたの思い出も聞かせてください。';
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'BlogPosting',
   headline: post.data.title,
   description: post.data.description,
+  image: new URL(ogImage, site).href,
   datePublished: post.data.publishedAt.toISOString(),
   dateModified: (post.data.updatedAt ?? post.data.publishedAt).toISOString(),
   mainEntityOfPage: articleUrl,
@@ -36,7 +39,7 @@ const jsonLd = {
   publisher: { '@type': 'Organization', name: 'ポケモン好きの休憩所' },
 };
 ---
-<BaseLayout title={post.data.title} description={post.data.description} ogType="article">
+<BaseLayout title={post.data.title} description={post.data.description} ogType="article" ogImage={ogImage} ogImageAlt={`${post.data.title} | ポケモン好きの休憩所`}>
   <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   <article class="post">
     <header class="post__header">
@@ -44,9 +47,11 @@ const jsonLd = {
         <div class="post__meta"><CategoryPill category={post.data.category} /><time datetime={post.data.publishedAt.toISOString()}>{date}</time></div>
         <h1>{post.data.title}</h1>
         <p class="post__description">{post.data.description}</p>
-        <div class="tag-list">
-          {post.data.tags.map((tag) => <span>#{tag}</span>)}
-        </div>
+        {post.data.tags.length > 0 && (
+          <div class="tag-list">
+            {post.data.tags.map((tag) => <span>#{tag}</span>)}
+          </div>
+        )}
       </div>
     </header>
     <div class="container narrow post__body prose">
@@ -56,8 +61,19 @@ const jsonLd = {
   <section class="section section--soft">
     <div class="container narrow question-box">
       <p class="eyebrow">LET'S TALK</p>
-      <h2>あなたの思い出も聞かせてください。</h2>
-      <p>記事を読んで思い出したことや、違う楽しみ方があれば、ぜひどこかで言葉にしてみてください。</p>
+      <h2>{articleQuestion}</h2>
+      <p>気が向いたときに、自分の思い出や好きな理由も言葉にしてみてください。</p>
+    </div>
+  </section>
+  <section class="section author-section">
+    <div class="container narrow author-card">
+      <span class="author-card__mark" aria-hidden="true">●</span>
+      <div>
+        <p class="eyebrow">ABOUT THIS BLOG</p>
+        <h2>ポケモン好きの休憩所</h2>
+        <p>ピカチュウが好きで、シンオウ地方に思い入れがある個人ブログです。推しポケモンや旅の思い出を、気軽に語っています。</p>
+        <p class="author-card__contact">お問い合わせは <a href="https://x.com/sorasitekanri" target="_blank" rel="noopener noreferrer">X（@sorasitekanri）</a> までお願いします。</p>
+      </div>
     </div>
   </section>
   {allPosts.length > 0 && (

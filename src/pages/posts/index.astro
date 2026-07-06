@@ -1,0 +1,31 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ArticleCard from '../../components/ArticleCard.astro';
+import { getCollection } from 'astro:content';
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf());
+---
+<BaseLayout title="記事一覧" description="ポケモン好きの休憩所に公開している記事一覧です。">
+  <section class="page-hero">
+    <div class="container narrow">
+      <p class="eyebrow">ALL NOTES</p>
+      <h1>記事一覧</h1>
+      <p>{posts.length}件の記事を公開しています。気になる話題から、ゆっくり読んでみてください。</p>
+    </div>
+  </section>
+  <section class="section">
+    <div class="container">
+      {posts.length ? (
+        <div class="article-grid">
+          {posts.map((post) => <ArticleCard post={post} />)}
+        </div>
+      ) : (
+        <div class="empty-state">
+          <p>最初の記事を準備中です。</p>
+          <a class="button button--ghost" href="/">トップへ戻る</a>
+        </div>
+      )}
+    </div>
+  </section>
+</BaseLayout>
