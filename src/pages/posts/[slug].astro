@@ -24,7 +24,7 @@ const allPosts = (await getCollection('blog', ({ data }) => !data.draft && data.
   .slice(0, 3);
 const site = import.meta.env.SITE || 'https://pokemon-break-room.pages.dev';
 const articleUrl = new URL(`/posts/${post.id}/`, site).href;
-const ogImage = `/og/${post.id}`;
+const ogImage = post.data.ogImage || `/og/${post.id}`;
 const articleQuestion = post.data.question || 'あなたの思い出も聞かせてください。';
 const jsonLd = {
   '@context': 'https://schema.org',

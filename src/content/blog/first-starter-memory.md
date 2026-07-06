@@ -7,6 +7,7 @@ tags:
   - "御三家"
   - "思い出"
   - "旅パーティ"
+ogImage: "/og/first-starter-memory.png"
 question: "最初に選んだ御三家と、そのときに一番覚えている出来事を、ひとつだけでも思い出してみてください。"
 draft: false
 ---

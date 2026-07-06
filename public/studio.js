@@ -166,6 +166,7 @@ function createMarkdown() {
     `description: "${yamlText(makeDescription(body))}"`,
     `publishedAt: ${publishedAt}`,
     `category: "${category}"`,
+    `ogImage: "/og/${slug}.png"`,
     'tags:',
     ...(tags.length ? tags.map((tag) => `  - "${yamlText(tag)}"`) : ['  - "ポケモン"']),
     ...(question ? [`question: "${yamlText(question)}"`] : []),
@@ -182,6 +183,7 @@ function createMarkdown() {
     question,
     tags,
     publishedAt,
+    ogImage: `/og/${slug}.png`,
   };
 }
 
@@ -221,6 +223,130 @@ function renderArticlePreview() {
         </div>
       </section>
     </div>`;
+}
+
+function wrapCanvasText(context, text, maxWidth, maxLines) {
+  const lines = [];
+  let current = '';
+  for (const character of String(text)) {
+    const candidate = current + character;
+    if (current && context.measureText(candidate).width > maxWidth) {
+      lines.push(current);
+      current = character;
+      if (lines.length === maxLines - 1) break;
+    } else {
+      current = candidate;
+    }
+  }
+  if (current && lines.length < maxLines) lines.push(current);
+  const consumed = lines.join('').length;
+  if (String(text).length > consumed && lines.length) {
+    let last = lines[lines.length - 1];
+    while (last && context.measureText(`${last}…`).width > maxWidth) last = last.slice(0, -1);
+    lines[lines.length - 1] = `${last}…`;
+  }
+  return lines.slice(0, maxLines);
+}
+
+function makeOgImageBase64(payload) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1200;
+  canvas.height = 630;
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('OGP画像の作成を開始できませんでした。');
+
+  const background = context.createLinearGradient(0, 0, 1200, 630);
+  background.addColorStop(0, '#fffaf1');
+  background.addColorStop(1, '#ffedca');
+  context.fillStyle = background;
+  context.fillRect(0, 0, 1200, 630);
+
+  context.globalAlpha = 0.78;
+  context.fillStyle = '#ffd36c';
+  context.beginPath();
+  context.arc(1070, 110, 94, 0, Math.PI * 2);
+  context.fill();
+  context.globalAlpha = 1;
+
+  context.fillStyle = '#dcebd0';
+  context.beginPath();
+  context.moveTo(0, 510);
+  context.bezierCurveTo(160, 405, 350, 470, 514, 604);
+  context.lineTo(0, 630);
+  context.closePath();
+  context.fill();
+
+  context.fillStyle = '#d8e8d4';
+  context.beginPath();
+  context.moveTo(927, 630);
+  context.bezierCurveTo(1016, 486, 1133, 436, 1200, 470);
+  context.lineTo(1200, 630);
+  context.closePath();
+  context.fill();
+
+  // Decorative round mark; no official artwork is used.
+  context.save();
+  context.shadowColor = 'rgba(183, 135, 74, 0.18)';
+  context.shadowBlur = 22;
+  context.shadowOffsetY = 12;
+  context.fillStyle = '#fffdf9';
+  context.strokeStyle = '#3f3f3f';
+  context.lineWidth = 12;
+  context.beginPath();
+  context.arc(992, 342, 123, 0, Math.PI * 2);
+  context.fill();
+  context.stroke();
+  context.restore();
+  context.save();
+  context.beginPath();
+  context.arc(992, 342, 117, Math.PI, 0);
+  context.closePath();
+  context.fillStyle = '#f28c72';
+  context.fill();
+  context.strokeStyle = '#3f3f3f';
+  context.lineWidth = 12;
+  context.beginPath();
+  context.moveTo(869, 342);
+  context.lineTo(1115, 342);
+  context.stroke();
+  context.fillStyle = '#fffdf9';
+  context.beginPath();
+  context.arc(992, 342, 34, 0, Math.PI * 2);
+  context.fill();
+  context.stroke();
+  context.restore();
+
+  const category = categoryNames[payload.category] || 'ポケモンの話';
+  context.fillStyle = '#e4edd9';
+  context.beginPath();
+  context.roundRect(96, 92, 188, 48, 22);
+  context.fill();
+  context.fillStyle = '#527146';
+  context.font = '700 23px sans-serif';
+  context.fillText(category, 120, 124);
+
+  context.fillStyle = '#3f3f3f';
+  context.font = '700 56px sans-serif';
+  const titleLines = wrapCanvasText(context, payload.title, 680, 3);
+  titleLines.forEach((line, index) => context.fillText(line, 96, 220 + index * 78));
+
+  context.strokeStyle = '#eadfce';
+  context.lineWidth = 2;
+  context.beginPath();
+  context.moveTo(96, 442);
+  context.lineTo(780, 442);
+  context.stroke();
+
+  context.fillStyle = '#6f706c';
+  context.font = '22px sans-serif';
+  const descriptionLines = wrapCanvasText(context, payload.description, 680, 2);
+  descriptionLines.forEach((line, index) => context.fillText(line, 96, 492 + index * 34));
+
+  context.fillStyle = '#50735f';
+  context.font = '700 23px sans-serif';
+  context.fillText('ポケモン好きの休憩所', 96, 588);
+
+  return canvas.toDataURL('image/png').replace(/^data:image\/png;base64,/, '');
 }
 
 function makePrompt() {
@@ -335,8 +461,9 @@ $('publish')?.addEventListener('click', async () => {
     const key = $('publish-key')?.value.trim();
     if (!key) throw new Error('公開キーを入力してください。');
     const payload = createMarkdown();
+    payload.ogImageBase64 = makeOgImageBase64(payload);
     if (!window.confirm(`「${payload.title}」をGitHubへ公開します。よろしいですか？`)) return;
-    setStatus('GitHubへ反映しています…');
+    setStatus('記事とOGP画像をGitHubへ反映しています…');
     const response = await fetch('/api/publish', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Publish-Key': key },
@@ -344,7 +471,7 @@ $('publish')?.addEventListener('click', async () => {
     });
     const result = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(result.error || '公開に失敗しました。Cloudflare設定を確認してください。');
-    setStatus(`GitHubへ反映しました。Cloudflare Pagesの自動デプロイ完了後に公開されます。${result.commitUrl ? ' GitHubのコミット画面を開けます。' : ''}`);
+    setStatus(`記事とOGP画像をGitHubへ反映しました。Cloudflare Pagesの自動デプロイ完了後に公開されます。${result.commitUrl ? ' GitHubのコミット画面を開けます。' : ''}`);
     if (result.commitUrl) {
       const link = document.createElement('a');
       link.href = result.commitUrl;

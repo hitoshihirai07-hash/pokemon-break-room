@@ -6,6 +6,7 @@ category: "lounge"
 tags:
   - "はじめに"
   - "ポケモンブログ"
+ogImage: "/og/welcome-to-break-room.png"
 question: "あなたの相棒ポケモンも、いつか聞かせてもらえたらうれしいです。"
 draft: false
 ---

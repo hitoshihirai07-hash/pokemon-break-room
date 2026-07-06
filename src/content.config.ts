@@ -11,6 +11,7 @@ const blog = defineCollection({
     category: z.enum(['favorite', 'memories', 'battle', 'chat', 'lounge']),
     tags: z.array(z.string()).default([]),
     question: z.string().max(240).optional(),
+    ogImage: z.string().optional(),
     draft: z.boolean().default(false),
   }),
 });

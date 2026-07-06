@@ -7,6 +7,7 @@ tags:
   - "対戦"
   - "育成"
   - "推しポケ"
+ogImage: "/og/like-pokemon-not-only-strength.png"
 question: "あなたには、「勝ちたい」より先に使いたくなるポケモンはいますか？"
 draft: false
 ---

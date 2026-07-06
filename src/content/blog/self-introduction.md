@@ -6,6 +6,7 @@ category: "favorite"
 tags:
   - "自己紹介"
   - "プロフィール"
+ogImage: "/og/self-introduction.png"
 question: "好きな世代はありますか？"
 draft: false
 ---

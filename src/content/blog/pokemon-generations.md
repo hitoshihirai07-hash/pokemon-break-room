@@ -7,6 +7,7 @@ tags:
   - "世代"
   - "地方"
   - "ゲーム"
+ogImage: "/og/pokemon-generations.png"
 question: "好きな世代と、その世代で特に思い出に残っているポケモンはありますか？"
 draft: false
 ---
