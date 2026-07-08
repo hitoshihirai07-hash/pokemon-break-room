@@ -3,7 +3,7 @@ import { getCollection } from 'astro:content';
 
 export const GET: APIRoute = async () => {
   const site = import.meta.env.SITE || 'https://pokemon-break-room.pages.dev';
-  const staticPaths = ['/', '/about/', '/privacy/', '/categories/favorite/', '/categories/memories/', '/categories/battle/', '/categories/chat/', '/categories/lounge/'];
+  const staticPaths = ['/', '/about/', '/advertising/', '/disclaimer/', '/privacy/', '/categories/favorite/', '/categories/memories/', '/categories/battle/', '/categories/chat/', '/categories/lounge/'];
   const posts = await getCollection('blog', ({ data }) => !data.draft);
   const urls = [
     ...staticPaths.map((path) => ({ loc: new URL(path, site).href, lastmod: null })),
