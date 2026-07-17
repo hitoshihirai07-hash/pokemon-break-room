@@ -1,7 +1,7 @@
 ---
 title: "ポケモン対戦の記録を残すと何が見えてくる？"
 description: "ポケモン対戦の記録を残すと、選出の傾向や苦手な相手、好きなポケモンの活躍が見えてきます。無理なく振り返る方法について書きました。"
-publishedAt: 2026-07-17
+publishedAt: 2026-07-18
 category: "battle"
 ogImage: "/og/what-pokemon-battle-records-reveal.png"
 tags:
