@@ -7,8 +7,14 @@ const date = post.data.publishedAt.toLocaleDateString('ja-JP', {
   month: 'long',
   day: 'numeric',
 });
+const searchText = [post.data.title, post.data.description, ...post.data.tags].join(' ');
 ---
-<article class:list={['article-card', { 'article-card--featured': featured }]}>
+<article
+  class:list={['article-card', { 'article-card--featured': featured }]}
+  data-post-card
+  data-category={post.data.category}
+  data-search-text={searchText}
+>
   <div class="article-card__meta">
     <CategoryPill category={post.data.category} />
     <time datetime={post.data.publishedAt.toISOString()}>{date}</time>

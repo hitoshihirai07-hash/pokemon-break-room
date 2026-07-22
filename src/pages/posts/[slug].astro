@@ -26,6 +26,8 @@ const site = import.meta.env.SITE || 'https://pokemon-break-room.pages.dev';
 const articleUrl = new URL(`/posts/${post.id}/`, site).href;
 const ogImage = post.data.ogImage || `/og/${post.id}`;
 const articleQuestion = post.data.question || 'あなたの思い出も聞かせてください。';
+const xShareText = `「${post.data.title}」を読みました。\n\n${articleQuestion}\n\n@sorasitekanri #ポケモン好きの休憩所`;
+const xShareUrl = `https://x.com/intent/post?text=${encodeURIComponent(xShareText)}&url=${encodeURIComponent(articleUrl)}`;
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'BlogPosting',
@@ -62,7 +64,11 @@ const jsonLd = {
     <div class="container narrow question-box">
       <p class="eyebrow">LET'S TALK</p>
       <h2>{articleQuestion}</h2>
-      <p>気が向いたときに、自分の思い出や好きな理由も言葉にしてみてください。</p>
+      <p>気が向いたときに、あなたの思い出や好きな理由もXで聞かせてください。</p>
+      <div class="question-box__actions">
+        <a class="button button--primary" href={xShareUrl} target="_blank" rel="noopener noreferrer">Xで感想を書く</a>
+        <a class="button button--ghost" href="https://x.com/sorasitekanri" target="_blank" rel="noopener noreferrer">Xアカウントを見る</a>
+      </div>
     </div>
   </section>
   <section class="section author-section">

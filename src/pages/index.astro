@@ -6,6 +6,15 @@ import { getCollection } from 'astro:content';
 const posts = (await getCollection('blog', ({ data }) => !data.draft))
   .sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf());
 const latest = posts.slice(0, 3);
+const starterSlugs = [
+  'why-i-love-pikachu',
+  'sinnoh-region-memories',
+  'battle-with-favorite-pokemon',
+];
+const starterPosts = starterSlugs.flatMap((slug) => {
+  const post = posts.find((item) => item.id === slug);
+  return post ? [post] : [];
+});
 const categoryCards = [
   { key: 'favorite', title: '推しポケ語り', text: '強さだけでは語れない、相棒ポケモンの魅力や思い出。' },
   { key: 'memories', title: 'ゲームと思い出', text: '旅パーティ、最初に選んだ御三家、忘れられない場面。' },
@@ -19,7 +28,7 @@ const categoryCards = [
     <div class="container hero__grid">
       <div class="hero__content">
         <p class="eyebrow">POKÉMON FAN BLOG</p>
-        <h1>ポケモンの話を、<br />もっと気軽に。</h1>
+        <h1 class="hero__title"><span>ポケモンの話を、</span><span>もっと気軽に。</span></h1>
         <p class="hero__lead">「ポケモン好きの休憩所」は、推しポケモンや旅の思い出、ゆるい対戦の話を置いていける個人ブログです。</p>
         <div class="hero__actions">
           <a class="button button--primary" href="#latest">最新の記事を見る</a>
@@ -48,6 +57,22 @@ const categoryCards = [
       </div>
       <div class="article-grid">
         {latest.map((post, index) => <ArticleCard post={post} featured={index === 0} />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="section starter-section">
+    <div class="container">
+      <div class="section-heading starter-section__heading">
+        <div>
+          <p class="eyebrow">FIRST VISIT</p>
+          <h2>初めて読む方へ</h2>
+          <p>この休憩所らしい「推しポケ」「旅の思い出」「ゆるい対戦」の話を、ひとつずつ選びました。</p>
+        </div>
+        <a class="text-link" href="/about/">この場所について <span aria-hidden="true">→</span></a>
+      </div>
+      <div class="article-grid">
+        {starterPosts.map((post) => <ArticleCard post={post} />)}
       </div>
     </div>
   </section>

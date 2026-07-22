@@ -5,6 +5,18 @@ import { getCollection } from 'astro:content';
 
 const posts = (await getCollection('blog', ({ data }) => !data.draft))
   .sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf());
+const categoryNames = {
+  favorite: '推しポケ語り',
+  memories: 'ゲームと思い出',
+  battle: 'ゆる対戦・育成',
+  chat: 'ポケモン雑談',
+  lounge: 'みんなの休憩所',
+};
+const categoryFilters = Object.entries(categoryNames).map(([key, label]) => ({
+  key,
+  label,
+  count: posts.filter((post) => post.data.category === key).length,
+}));
 ---
 <BaseLayout title="記事一覧" description="ポケモン好きの休憩所に公開している記事一覧です。">
   <section class="page-hero">
@@ -17,9 +29,35 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
   <section class="section">
     <div class="container">
       {posts.length ? (
-        <div class="article-grid">
-          {posts.map((post) => <ArticleCard post={post} />)}
-        </div>
+        <>
+          <div class="posts-toolbar" aria-label="記事の検索と絞り込み">
+            <label class="post-search" for="post-search">
+              <span>キーワードで検索</span>
+              <input id="post-search" type="search" placeholder="ポケモン名や話題を入力" autocomplete="off" />
+            </label>
+            <div class="category-filters" role="group" aria-label="カテゴリで絞り込む">
+              <button class="filter-button is-active" type="button" data-category-filter="all" aria-pressed="true">
+                すべて <span>{posts.length}</span>
+              </button>
+              {categoryFilters.map((category) => (
+                <button class="filter-button" type="button" data-category-filter={category.key} aria-pressed="false">
+                  {category.label} <span>{category.count}</span>
+                </button>
+              ))}
+            </div>
+            <div class="posts-result-summary" aria-live="polite">
+              <p><strong id="visible-post-count">{posts.length}</strong>件の記事を表示しています</p>
+              <button id="clear-post-filters" class="clear-filter-button" type="button" hidden>検索条件をクリア</button>
+            </div>
+          </div>
+          <div id="post-list" class="article-grid">
+            {posts.map((post) => <ArticleCard post={post} />)}
+          </div>
+          <div id="filter-empty-state" class="empty-state filter-empty-state" hidden>
+            <p>条件に合う記事が見つかりませんでした。</p>
+            <p>別のキーワードやカテゴリで試してみてください。</p>
+          </div>
+        </>
       ) : (
         <div class="empty-state">
           <p>最初の記事を準備中です。</p>
@@ -28,4 +66,57 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
       )}
     </div>
   </section>
+
+  <script>
+    const searchInput = document.querySelector<HTMLInputElement>('#post-search');
+    const filterButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-category-filter]'));
+    const postCards = Array.from(document.querySelectorAll<HTMLElement>('[data-post-card]'));
+    const visibleCount = document.querySelector<HTMLElement>('#visible-post-count');
+    const clearButton = document.querySelector<HTMLButtonElement>('#clear-post-filters');
+    const emptyState = document.querySelector<HTMLElement>('#filter-empty-state');
+    let activeCategory = 'all';
+
+    const normalize = (value: string) => value.normalize('NFKC').toLocaleLowerCase('ja-JP').trim();
+
+    const updatePosts = () => {
+      const query = normalize(searchInput?.value ?? '');
+      let count = 0;
+
+      postCards.forEach((card) => {
+        const matchesCategory = activeCategory === 'all' || card.dataset.category === activeCategory;
+        const matchesQuery = !query || normalize(card.dataset.searchText ?? '').includes(query);
+        const isVisible = matchesCategory && matchesQuery;
+        card.hidden = !isVisible;
+        if (isVisible) count += 1;
+      });
+
+      if (visibleCount) visibleCount.textContent = String(count);
+      if (emptyState) emptyState.hidden = count !== 0;
+      if (clearButton) clearButton.hidden = activeCategory === 'all' && !query;
+    };
+
+    searchInput?.addEventListener('input', updatePosts);
+    filterButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        activeCategory = button.dataset.categoryFilter ?? 'all';
+        filterButtons.forEach((item) => {
+          const isActive = item === button;
+          item.classList.toggle('is-active', isActive);
+          item.setAttribute('aria-pressed', String(isActive));
+        });
+        updatePosts();
+      });
+    });
+    clearButton?.addEventListener('click', () => {
+      activeCategory = 'all';
+      if (searchInput) searchInput.value = '';
+      filterButtons.forEach((button) => {
+        const isAll = button.dataset.categoryFilter === 'all';
+        button.classList.toggle('is-active', isAll);
+        button.setAttribute('aria-pressed', String(isAll));
+      });
+      updatePosts();
+      searchInput?.focus();
+    });
+  </script>
 </BaseLayout>
